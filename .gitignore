@@ -1,0 +1,7 @@
+pyrightconfig.json
+**/dataset/**
+**/__pycache__/**
+**/chechpoint/**
+**/chechpoints/**
+**/.ipynb_checkpoints/**
+**/runs/**
