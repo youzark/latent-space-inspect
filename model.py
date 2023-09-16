@@ -33,21 +33,25 @@ class BasicBlock(nn.Module):
             x = self.activation(x)
         return x
 
-    def swap_input(self, i ,j):
-        """
-        to countereffect feature dimension swap to the following layers
-        """
+    def swap_output(self, i ,j):
         with torch.no_grad():
             weight = self.conv.weight
             weight[[i,j],:,:,:] = weight[[j,i],:,:,:]
 
-    def swap_output(self, i ,j):
-        """
-        to swap dimension of the output features
-        """
+    def swap_input(self, i ,j):
         with torch.no_grad():
             weight = self.conv.weight
             weight[:,[i,j],:,:] = weight[:,[j,i],:,:]
+
+    def rearrange_output(self, index):
+        with torch.no_grad():
+            weight = self.conv.weight
+            weight[range(self.out_channels),:,:,:] = weight[index,:,:,:]
+
+    def rearrange_input(self, index):
+        with torch.no_grad():
+            weight = self.conv.weight
+            weight[:,range(self.in_channels),:,:] = weight[:,index,:,:]
 
 
 
