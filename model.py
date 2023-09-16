@@ -22,17 +22,36 @@ class BasicBlock(nn.Module):
             stride=stride,
             bias=False
         )
-        self.norm = nn.BatchNorm2d(
-            num_features=out_channels
-        )
+        # self.norm = nn.BatchNorm2d(
+        #     num_features=out_channels
+        # )
         self.activation = activation
 
     def forward(self,x):
         x = self.conv(x)
-        x = self.norm(x)
         if self.activation:
             x = self.activation(x)
         return x
+
+    def swap_input(self, i ,j):
+        """
+        to countereffect feature dimension swap to the following layers
+        """
+        with torch.no_grad():
+            weight = self.conv.weight
+            weight[[i,j],:,:,:] = weight[[j,i],:,:,:]
+
+    def swap_output(self, i ,j):
+        """
+        to swap dimension of the output features
+        """
+        with torch.no_grad():
+            weight = self.conv.weight
+            weight[:,[i,j],:,:] = weight[:,[j,i],:,:]
+
+
+
+
 
 class ClassificationHead(nn.Module):
     def __init__(
@@ -60,38 +79,38 @@ class CNN(nn.Module):
         class_number:int
          ):
         super().__init__()
-        layer1 = BasicBlock(
+        self.layer1 = BasicBlock(
             in_channels=1,
             out_channels=24,
             kernel_size=7,
             stride=2,
         )
-        layer2 = BasicBlock(
+        self.layer2 = BasicBlock(
             in_channels=24,
             out_channels=48,
             kernel_size=3,
             stride=2,
         )
-        layer3 = BasicBlock(
+        self.layer3 = BasicBlock(
             in_channels=48,
             out_channels=48,
             kernel_size=3,
             stride=1,
         )
-        layer4 = BasicBlock(
+        self.layer4 = BasicBlock(
             in_channels=48,
             out_channels=96,
             kernel_size=3,
             stride=2,
         )
-        layer5 = BasicBlock(
+        self.layer5 = BasicBlock(
             in_channels=96,
             out_channels=96,
             kernel_size=3,
             stride=1,
         )
         self.layers = nn.Sequential(
-            layer1,layer2,layer3,layer4,layer5
+            self.layer1,self.layer2,self.layer3,self.layer4,self.layer5
         )
         self.classifier = ClassificationHead(
             in_features=96*8*8,
@@ -99,8 +118,12 @@ class CNN(nn.Module):
         )
 
     def forward(self, x):
-        x = self.layers(x)
-        B, C, H, W = x.shape
-        x = rearrange(x, "b c h w -> b (c h w)")
+        x1 = self.layer1(x)
+        x2 = self.layer2(x1)
+        x3 = self.layer3(x2)
+        x4 = self.layer4(x3)
+        x5 = self.layer5(x4)
+        B, C, H, W = x5.shape
+        x = rearrange(x5, "b c h w -> b (c h w)")
         prob = self.classifier(x)
-        return prob
+        return prob,x1,x2,x3,x4,x5
