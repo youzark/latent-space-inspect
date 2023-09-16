@@ -11,3 +11,15 @@ x = torch.randn(2,3)
 print(x)
 x[[0,1],:] = x[[1,0],:] # swap row
 print(x)
+
+tensor = torch.randn(10)
+
+# Get the indices that would sort the tensor
+sorted_indices = torch.argsort(tensor)
+
+# For descending order, you can reverse the indices
+descending_indices = sorted_indices.flip(dims=[0])
+
+print("Tensor:", tensor)
+print("Indices for sorted tensor:", sorted_indices)
+print("Indices for descending order:", descending_indices)
