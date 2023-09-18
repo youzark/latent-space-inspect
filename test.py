@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import torch
 from einops import rearrange
+from torch import nn
 
 x = torch.randn(2,3)
 print(x)
@@ -29,3 +30,17 @@ tensor = torch.randn(3,3)
 print(tensor)
 tensor = rearrange(tensor, "a b -> b a")
 print(tensor)
+
+tensor[:,2:].fill_(0)
+print(tensor)
+
+conv = nn.Conv2d(
+    in_channels=3,
+    out_channels=24,
+    kernel_size=3,
+    stride=2,
+    padding=1,
+    bias=True
+)
+if conv.bias != None:
+    print(conv.bias.shape)

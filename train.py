@@ -34,6 +34,10 @@ layer1_BarPloter_ascending = BarPloter(
     tag = "Feature Dist of layer 1 with ascending order",
     writer= writer
 )
+layer1_BarPloter_ascending_trunc = BarPloter(
+    tag = "Feature Dist of layer 1 with ascending order after truncate",
+    writer= writer
+)
 layer1_HeatMapPloter = HeatMapPloter(
     tag = "Feature dist of single inference",
     writer= writer
@@ -138,9 +142,29 @@ for epoch in range(EPOCH):
         x1_col = rearrange(x1_col, "b c h w -> (b h w) c")
         x1_col = softmax(x1_col)
         x1_col_mean = torch.mean(x1_col,dim=0)
-        layer1_BarPloter_ascending.plot(x1_col_mean)
+        # layer1_BarPloter_ascending.plot(x1_col_mean)
 
-        layer1_kernelPloter.plot(model.layer1.conv.weight)
+
+        x1_col = torch.empty(0,16,32,32).to(DEVICE)
+        correct=0
+        for data, target in test_loader:
+            data = data.to(DEVICE)
+            target = target.to(DEVICE)
+            prob_dist,x1,x2,x3,x4,x5 = model(data)
+            x1_col = torch.cat((x1_col,x1),dim=0)
+
+            pred = prob_dist.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+
+        x1_col = rearrange(x1_col, "b c h w -> (b h w) c")
+        x1_col = softmax(x1_col)
+        x1_col_mean = torch.mean(x1_col,dim=0)
+
+        print(f"Acc after trunc: {correct}/{len(test_loader.dataset)}")
+
+        # layer1_BarPloter_ascending_trunc.plot(x1_col_mean)
+
+        # layer1_kernelPloter.plot(model.layer1.conv.weight)
 
 
 

@@ -53,7 +53,63 @@ class BasicBlock(nn.Module):
             weight = self.conv.weight
             weight[:,range(self.in_channels),:,:] = weight[:,index,:,:]
 
+    def truncate_output(
+            self,
+            num_trunc:int,
+            trunc_tail:bool=True, #if False, truncate from low dimension
+        ):
+        with torch.no_grad():
+            in_channels = self.conv.in_channels
+            out_channels = self.conv.out_channels
+            kernel_size = self.conv.kernel_size
+            padding = self.conv.padding
+            stride = self.conv.stride
+            bias = self.conv.bias
 
+            truncated_old_weight = self.conv.weight[:-num_trunc,:,:,:] if trunc_tail else self.conv.weight[num_trunc:,:,:,:]
+
+            truncated_old_bias=None
+            if self.conv.bias != None:
+                truncated_old_bias = self.conv.bias[:-num_trunc] if trunc_tail else self.conv.bias[num_trunc:]
+
+            self.conv = nn.Conv2d(
+                in_channels=in_channels,
+                out_channels=out_channels - num_trunc,
+                kernel_size=kernel_size,
+                padding=padding,
+                stride=stride,
+                bias=bias
+            )
+
+            self.conv.weight = truncated_old_weight
+            if truncated_old_bias != None:
+                self.conv.bias = truncated_old_bias
+
+    def truncate_input(
+            self,
+            num_trunc:int,
+            trunc_tail:bool=True, #if False, truncate from low dimension
+        ):
+        with torch.no_grad():
+            in_channels = self.conv.in_channels
+            out_channels = self.conv.out_channels
+            kernel_size = self.conv.kernel_size
+            padding = self.conv.padding
+            stride = self.conv.stride
+            bias = self.conv.bias
+
+            truncated_old_weight = self.conv.weight[:,:-num_trunc,:,:] if trunc_tail else self.conv.weight[:,num_trunc:,:,:]
+
+            self.conv = nn.Conv2d(
+                in_channels=in_channels - num_trunc,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                padding=padding,
+                stride=stride,
+                bias=bias
+            )
+
+            self.conv.weight = truncated_old_weight
 
 
 
@@ -68,7 +124,7 @@ class ClassificationHead(nn.Module):
             in_features=in_features,
             out_features= class_number,
         )
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         logits = self.linear(x)
@@ -113,9 +169,9 @@ class CNN(nn.Module):
             kernel_size=3,
             stride=1,
         )
-        self.layers = nn.Sequential(
+        self.layers = [
             self.layer1,self.layer2,self.layer3,self.layer4,self.layer5
-        )
+        ]
         self.classifier = ClassificationHead(
             in_features=64*8*8,
             class_number=class_number
