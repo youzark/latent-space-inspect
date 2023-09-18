@@ -85,31 +85,31 @@ class CNN(nn.Module):
         super().__init__()
         self.layer1 = BasicBlock(
             in_channels=1,
-            out_channels=24,
-            kernel_size=7,
+            out_channels=16,
+            kernel_size=3,
             stride=2,
         )
         self.layer2 = BasicBlock(
-            in_channels=24,
-            out_channels=48,
+            in_channels=16,
+            out_channels=32,
             kernel_size=3,
             stride=2,
         )
         self.layer3 = BasicBlock(
-            in_channels=48,
-            out_channels=48,
+            in_channels=32,
+            out_channels=32,
             kernel_size=3,
             stride=1,
         )
         self.layer4 = BasicBlock(
-            in_channels=48,
-            out_channels=96,
+            in_channels=32,
+            out_channels=64,
             kernel_size=3,
             stride=2,
         )
         self.layer5 = BasicBlock(
-            in_channels=96,
-            out_channels=96,
+            in_channels=64,
+            out_channels=64,
             kernel_size=3,
             stride=1,
         )
@@ -117,7 +117,7 @@ class CNN(nn.Module):
             self.layer1,self.layer2,self.layer3,self.layer4,self.layer5
         )
         self.classifier = ClassificationHead(
-            in_features=96*8*8,
+            in_features=64*8*8,
             class_number=class_number
         )
 
@@ -127,7 +127,6 @@ class CNN(nn.Module):
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
         x5 = self.layer5(x4)
-        B, C, H, W = x5.shape
         x = rearrange(x5, "b c h w -> b (c h w)")
         prob = self.classifier(x)
         return prob,x1,x2,x3,x4,x5

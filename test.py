@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import torch
+from einops import rearrange
 
 x = torch.randn(2,3)
 print(x)
@@ -23,3 +24,8 @@ descending_indices = sorted_indices.flip(dims=[0])
 print("Tensor:", tensor)
 print("Indices for sorted tensor:", sorted_indices)
 print("Indices for descending order:", descending_indices)
+
+tensor = torch.randn(3,3)
+print(tensor)
+tensor = rearrange(tensor, "a b -> b a")
+print(tensor)

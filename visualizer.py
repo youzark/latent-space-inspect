@@ -9,6 +9,9 @@ from abc import ABC, abstractmethod
 from torch.utils.tensorboard.writer import SummaryWriter
 
 from torchvision import transforms
+from torchvision.utils import make_grid
+
+from einops import rearrange
 
 class PlotWriter(ABC):
     def __init__(
@@ -64,10 +67,14 @@ class BarPloter(PlotWriter):
 
 class HeatMapPloter(PlotWriter):
     def plot(self, tensor:torch.Tensor):
+        tensor = tensor[:1000]
+        tensor = rearrange(tensor, "n c -> c n")
         tensor = tensor.to("cpu")
-        plt.bar(range(len(tensor)),tensor)
-        plt.imshow(tensor, cmap="hot")
+        plt.figure(figsize=(480,6))
+        plt.imshow(tensor, cmap="cool", aspect="auto")
+        plt.savefig(self.buf, format="jpeg")
         plt.clf()
+        plt.figure(figsize=(6.4,4.8))
         self.buf.seek(0)
         image = Image.open(self.buf)
         transformation = transforms.ToTensor()
@@ -79,3 +86,26 @@ class HeatMapPloter(PlotWriter):
         self.buf.seek(0)
         self.buf.truncate(0)
         self.step += 1
+
+
+class Layer1KernelVisualizer(PlotWriter):
+    """
+    inspect what pattern get captured
+    """
+    def plot(
+        self,
+        weight:torch.Tensor,
+        ):
+        weight = weight.to("cpu")
+
+        img_grid = make_grid(weight,
+                             nrow = 6,
+                             normalize=True)
+        self.writer.add_image(
+            tag= self.tag,
+            img_tensor= img_grid,
+            global_step=self.step
+        )
+        self.step += 1
+
+
