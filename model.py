@@ -12,8 +12,6 @@ class BasicBlock(nn.Module):
         activation: nn.ReLU|None = nn.ReLU()
         ):
         super().__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
         self.conv = nn.Conv2d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -27,11 +25,15 @@ class BasicBlock(nn.Module):
         # )
         self.activation = activation
 
+
     def forward(self,x):
         x = self.conv(x)
         if self.activation:
             x = self.activation(x)
         return x
+
+    def get_shape(self):
+        return self.conv.in_channels, self.conv.out_channels
 
     def swap_output(self, i ,j):
         with torch.no_grad():
@@ -46,12 +48,12 @@ class BasicBlock(nn.Module):
     def rearrange_output(self, index):
         with torch.no_grad():
             weight = self.conv.weight
-            weight[range(self.out_channels),:,:,:] = weight[index,:,:,:]
+            weight[range(self.conv.out_channels),:,:,:] = weight[index,:,:,:]
 
     def rearrange_input(self, index):
         with torch.no_grad():
             weight = self.conv.weight
-            weight[:,range(self.in_channels),:,:] = weight[:,index,:,:]
+            weight[:,range(self.conv.in_channels),:,:] = weight[:,index,:,:]
 
     def truncate_output(
             self,
@@ -81,9 +83,9 @@ class BasicBlock(nn.Module):
                 bias=bias
             )
 
-            self.conv.weight = truncated_old_weight
+            self.conv.weight = nn.Parameter(truncated_old_weight)
             if truncated_old_bias != None:
-                self.conv.bias = truncated_old_bias
+                self.conv.bias = nn.Parameter(truncated_old_bias)
 
     def truncate_input(
             self,
@@ -109,7 +111,7 @@ class BasicBlock(nn.Module):
                 bias=bias
             )
 
-            self.conv.weight = truncated_old_weight
+            self.conv.weight = nn.Parameter(truncated_old_weight)
 
 
 
@@ -183,6 +185,23 @@ class CNN(nn.Module):
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
         x5 = self.layer5(x4)
+        latents = (x1,x2,x3,x4,x5)
         x = rearrange(x5, "b c h w -> b (c h w)")
         prob = self.classifier(x)
-        return prob,x1,x2,x3,x4,x5
+        return prob, latents
+
+    def rearrage_feature_dimension(
+            self,
+            layer_idx:int,
+            new_indices:torch.Tensor
+        ):
+        self.layers[layer_idx-1].rearrange_output(new_indices)
+        self.layers[layer_idx].rearrange_input(new_indices)
+
+    def truncate_feature_dimension(
+        self,
+        layer_idx:int,
+        num_trunc:int=1
+        ):
+        self.layers[layer_idx-1].truncate_output(num_trunc)
+        self.layers[layer_idx].truncate_input(num_trunc)

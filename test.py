@@ -44,3 +44,8 @@ conv = nn.Conv2d(
 )
 if conv.bias != None:
     print(conv.bias.shape)
+
+if {}:
+    print("yes")
+else:
+    print("no")

@@ -1,4 +1,7 @@
 import torch
+from torch import nn
+
+from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -13,6 +16,8 @@ from torchvision.utils import make_grid
 
 from einops import rearrange
 
+from model import CNN
+
 class PlotWriter(ABC):
     def __init__(
         self,
@@ -25,8 +30,17 @@ class PlotWriter(ABC):
         self.buf = io.BytesIO()
 
     @abstractmethod
-    def plot(self, tensor:torch.Tensor):
+    def plot(self, data:torch.Tensor|int|float):
         pass
+
+class ScalerPloter(PlotWriter):
+    def plot(self, acc:int|float):
+        self.writer.add_scalar(
+            tag = self.tag,
+            scalar_value = acc,
+            global_step = self.step
+        )
+        self.step += 1
 
 class LinePloter(PlotWriter):
     def plot(self, tensor:torch.Tensor):
