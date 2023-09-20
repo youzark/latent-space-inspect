@@ -17,7 +17,7 @@ class Analyzer:
         self.model.eval()
         with torch.no_grad():
             self.correct=0
-            for data, target in self.loader:
+            for _,(data, target) in enumerate(self.loader):
                 data = data.to(self.device)
                 target = target.to(self.device)
                 prob_dist,self.latents = self.model(data)
@@ -27,7 +27,6 @@ class Analyzer:
 
     def reevaluate(self):
         self.model.eval()
-        self.device = next(self.model.parameters()).device
         with torch.no_grad():
             self.correct=0
             for data, target in self.loader:
@@ -48,7 +47,7 @@ class Analyzer:
         self,
         layer:int,
         ):
-        feature = rearrange(self.latents[layer], "b c h w -> (b h w) c")
+        feature = rearrange(self.latents[layer-1], "b c h w -> (b h w) c")
         softmax = nn.Softmax(dim=1)
         feature = softmax(feature)
         return torch.mean(feature,dim=0)

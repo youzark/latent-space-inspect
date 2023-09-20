@@ -1,7 +1,4 @@
 import torch
-from torch import nn
-
-from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -9,38 +6,45 @@ from PIL import Image
 import io
 from abc import ABC, abstractmethod
 
-from torch.utils.tensorboard.writer import SummaryWriter
+# from torch.utils.tensorboard.writer import SummaryWriter
+from tensorboardX import SummaryWriter
 
 from torchvision import transforms
 from torchvision.utils import make_grid
 
 from einops import rearrange
 
-from model import CNN
-
 class PlotWriter(ABC):
     def __init__(
         self,
         tag:str,
-        writer:SummaryWriter
+        group:str,
+        writer:SummaryWriter|None = None,
         ):
         self.step= 0
-        self.writer= writer
+        self.writer:SummaryWriter= writer if writer else SummaryWriter()
         self.tag= tag
+        self.group=group
         self.buf = io.BytesIO()
 
     @abstractmethod
     def plot(self, data:torch.Tensor|int|float):
         pass
 
+    def __call__(
+        self,
+        data,
+        ):
+        self.plot(data)
+        self.step+=1
+
 class ScalerPloter(PlotWriter):
     def plot(self, acc:int|float):
-        self.writer.add_scalar(
-            tag = self.tag,
-            scalar_value = acc,
+        self.writer.add_scalars(
+            main_tag = self.group,
+            tag_scalar_dict = {self.tag:acc},
             global_step = self.step
         )
-        self.step += 1
 
 class LinePloter(PlotWriter):
     def plot(self, tensor:torch.Tensor):
@@ -58,7 +62,6 @@ class LinePloter(PlotWriter):
         )
         self.buf.seek(0)
         self.buf.truncate(0)
-        self.step += 1
 
 
 class BarPloter(PlotWriter):
@@ -77,7 +80,6 @@ class BarPloter(PlotWriter):
         )
         self.buf.seek(0)
         self.buf.truncate(0)
-        self.step += 1
 
 class HeatMapPloter(PlotWriter):
     def plot(self, tensor:torch.Tensor):
@@ -99,7 +101,6 @@ class HeatMapPloter(PlotWriter):
         )
         self.buf.seek(0)
         self.buf.truncate(0)
-        self.step += 1
 
 
 class Layer1KernelVisualizer(PlotWriter):
@@ -120,6 +121,5 @@ class Layer1KernelVisualizer(PlotWriter):
             img_tensor= img_grid,
             global_step=self.step
         )
-        self.step += 1
 
 

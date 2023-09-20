@@ -201,7 +201,14 @@ class CNN(nn.Module):
     def truncate_feature_dimension(
         self,
         layer_idx:int,
-        num_trunc:int=1
+        num_trunc:int=1,
+        trunc_tail:bool=True
         ):
-        self.layers[layer_idx-1].truncate_output(num_trunc)
-        self.layers[layer_idx].truncate_input(num_trunc)
+        self.layers[layer_idx-1].truncate_output(
+            num_trunc= num_trunc,
+            trunc_tail= trunc_tail
+        )
+        self.layers[layer_idx].truncate_input(
+            num_trunc=num_trunc,
+            trunc_tail= trunc_tail,
+        )

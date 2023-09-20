@@ -1,4 +1,3 @@
-import torch
 from torch import nn,optim
 import torch.optim as optim
 from model import CNN
@@ -7,7 +6,10 @@ from torch.utils.data import DataLoader
 from torch.nn import CrossEntropyLoss
 from torchvision import transforms, datasets
 
+from visualizer import PlotWriter,ScalerPloter,BarPloter
+
 from latent_analyzer import Analyzer
+from typing import Dict, Any, List, Tuple
 class Trainer:
     def __init__(
         self,
@@ -83,6 +85,7 @@ class TrainingDynamic:
         batch_size:int = 256,
         learning_rate:float = 3e-4,
         device:str = "cuda",
+        stateDict: None|Dict[str,Any] = None
         ):
 
         self.train_loader,self.test_loader = get_data(batch_size)
@@ -90,6 +93,9 @@ class TrainingDynamic:
         self.model = CNN(
             class_number= 10
         ).to(device)
+
+        if stateDict:
+            self.model.load_state_dict(stateDict)
 
         self.criterion = nn.CrossEntropyLoss()
 
@@ -109,3 +115,68 @@ class TrainingDynamic:
             criterion= self.criterion,
             optimizer= self.optimizer
         )
+
+        self.ploters:List[Tuple[PlotWriter,Any]] = []
+
+        self.evaluated = False
+
+    def train(self):
+        self.trainer()
+        self.evaluated = False
+
+    def evaluate(self):
+        if not self.evaluated:
+            self.analyzer.reevaluate()
+        self.evaluated = True
+
+    def SortDimension(
+        self,
+        layer:int,
+        descending:bool = True
+        ):
+        self.evaluate()
+        sort_index = self.analyzer.feature_sorted_index(
+            layer= layer,
+            descending= descending
+        )
+        self.model.rearrage_feature_dimension(
+            layer_idx= layer,
+            new_indices= sort_index,
+        )
+        self.evaluated = False
+
+    def TruncateDimension(
+        self,
+        layer:int,
+        num_trunc:int=1,
+        trunc_tail:bool=True
+        ):
+        self.evaluate()
+        self.model.truncate_feature_dimension(
+            layer_idx=layer,
+            num_trunc=num_trunc,
+            trunc_tail=trunc_tail
+        )
+        self.evaluated = False
+
+    def acc(
+        self,
+        ) -> float:
+        self.evaluate()
+        return self.analyzer.passed_case()/self.analyzer.total_case()
+
+    def regist_acc_plotter(
+        self,
+        tag,
+        group,
+        ):
+        self.ploters.append((ScalerPloter(
+            tag = tag,
+            group = group,
+        ),self.acc))
+        return self
+
+    def plot(self):
+        for ploter, data_getter in self.ploters:
+            ploter(data_getter())
+
