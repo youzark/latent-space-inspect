@@ -28,26 +28,27 @@ class PlotWriter(ABC):
         self.buf = io.BytesIO()
 
     @abstractmethod
-    def plot(self, data:torch.Tensor|int|float):
+    def _plot(self, data:torch.Tensor|int|float):
         pass
 
     def __call__(
         self,
         data,
         ):
-        self.plot(data)
+        self._plot(data)
         self.step+=1
+        self.writer.flush()
 
 class ScalerPloter(PlotWriter):
-    def plot(self, acc:int|float):
+    def _plot(self, data:torch.Tensor|int|float):
         self.writer.add_scalars(
             main_tag = self.group,
-            tag_scalar_dict = {self.tag:acc},
+            tag_scalar_dict = {self.tag:data},
             global_step = self.step
         )
 
 class LinePloter(PlotWriter):
-    def plot(self, tensor:torch.Tensor):
+    def _plot(self, tensor:torch.Tensor):
         tensor = tensor.to("cpu")
         plt.plot(tensor)
         plt.savefig(self.buf, format="jpeg")
@@ -65,7 +66,7 @@ class LinePloter(PlotWriter):
 
 
 class BarPloter(PlotWriter):
-    def plot(self, tensor:torch.Tensor):
+    def _plot(self, tensor:torch.Tensor):
         tensor = tensor.to("cpu")
         plt.bar(range(len(tensor)),tensor)
         plt.savefig(self.buf, format="jpeg")
@@ -82,7 +83,7 @@ class BarPloter(PlotWriter):
         self.buf.truncate(0)
 
 class HeatMapPloter(PlotWriter):
-    def plot(self, tensor:torch.Tensor):
+    def _plot(self, tensor:torch.Tensor):
         tensor = tensor[:1000]
         tensor = rearrange(tensor, "n c -> c n")
         tensor = tensor.to("cpu")
@@ -107,7 +108,7 @@ class Layer1KernelVisualizer(PlotWriter):
     """
     inspect what pattern get captured
     """
-    def plot(
+    def _plot(
         self,
         weight:torch.Tensor,
         ):
