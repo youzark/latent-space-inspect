@@ -49,3 +49,25 @@ if {}:
     print("yes")
 else:
     print("no")
+
+
+tensors = torch.Tensor([
+    [1,2,3],
+    [1,2,3],
+    [1,2,3],
+    [1,2,3],
+    [2,2,3],
+])
+print(torch.all(tensors == tensors[0], dim=0))
+
+
+# Assume you have a tensor with elements from 1 to 10
+tensor = torch.tensor([2,1,  2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 7, 8, 9, 10])
+
+# Count the frequency of each element
+counts = torch.bincount(tensor)
+
+# Create a list of tuples (number, frequency)
+number_frequency = [(i, c.item()) for i, c in enumerate(counts) if c > 0]
+
+print(number_frequency)

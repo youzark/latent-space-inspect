@@ -128,8 +128,8 @@ for epoch in range(EPOCH):
                 f"Loss : {loss:.4F}",
             )
 
-    analyzer.reevaluate()
-    visiualizer["acc"].plot(analyzer.passed_case()/analyzer.total_case())
+    analyzer.evaluate()
+    visiualizer["acc"].__plot(analyzer.passed_case()/analyzer.total_case())
 
 
 

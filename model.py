@@ -49,6 +49,7 @@ class BasicBlock(nn.Module):
         with torch.no_grad():
             weight = self.conv.weight
             weight[range(self.conv.out_channels),:,:,:] = weight[index,:,:,:]
+            # TODO: self.conv.out_channels might not accurate after pruning, might need revision
 
     def rearrange_input(self, index):
         with torch.no_grad():
@@ -143,12 +144,12 @@ class CNN(nn.Module):
         super().__init__()
         self.layer1 = BasicBlock(
             in_channels=1,
-            out_channels=16,
+            out_channels=24,
             kernel_size=3,
             stride=2,
         )
         self.layer2 = BasicBlock(
-            in_channels=16,
+            in_channels=24,
             out_channels=32,
             kernel_size=3,
             stride=2,
