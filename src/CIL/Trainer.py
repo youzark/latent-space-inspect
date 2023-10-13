@@ -79,15 +79,16 @@ class TrainingDynamic:
             params= self.model.parameters(),
             lr = learning_rate,
         )
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
 
-        self.trainers = [ Trainer(model=self.model, 
+
+        self.trainers = [ Trainer(model=self.model,
                                  loader = self.train_loaders[task_id],
                                  criterion=criterion,
                                  optimizer=optimizer,
                                  task_id=task_id) for task_id in range(self.num_of_task) ]
 
-        self.analyzers = [ Analyzer(model=self.model, 
+        self.analyzers = [ Analyzer(model=self.model,
                                     loader = self.test_loaders[task_id]) for task_id in range(self.num_of_task)]
         self.learned_task_ids = []
 

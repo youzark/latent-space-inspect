@@ -1,0 +1,5 @@
+setup.py
+class_incremental.egg-info/PKG-INFO
+class_incremental.egg-info/SOURCES.txt
+class_incremental.egg-info/dependency_links.txt
+class_incremental.egg-info/top_level.txt

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-import torch 
+import torch
 from Trainer import TrainingDynamic
-TASK = 2
-from dataloader import CILMNIST
+from Dataloader import CILMNIST
 import matplotlib.pyplot as plt
+
+TASK = 2
 
 agent = TrainingDynamic(
     batch_size=256,
@@ -11,7 +12,7 @@ agent = TrainingDynamic(
     learning_rate=0.05
 )
 
-agent.regist_acc_plotter(group="Class Incremental Learning",tag="CIL")
+# agent.regist_acc_plotter(group="Class Incremental Learning",tag="CIL")
 
 lin_weights = [agent.model.linear.weight.mean(dim=0)]
 lin_weights_out = [agent.model.linear.weight.norm(dim=1)]
@@ -25,7 +26,7 @@ for task_id in range(2):
         lin_weights.append(agent.model.linear.weight.mean(dim=0))
         lin_weights_out.append(agent.model.linear.weight.norm(dim=1))
         print(agent.model.linear.weight.norm(dim=1))
-        agent.model.linear.uniform_Norm()
+        # agent.model.linear.uniform_Norm()
         # print(f"Epoch: {epoch} Agent:{task_id:} on task {task_id:} acc {agent.acc(task_id):.2f} ")
         for eval_task_id in range(task_id+1):
 

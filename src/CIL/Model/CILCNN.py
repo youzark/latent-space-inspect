@@ -141,7 +141,7 @@ class BasicConv(nn.Module):
         self.activation = activation
         self.inspect = False
         self.latents = torch.empty(0,in_channels).to("cuda")
-        
+
 
     def forward(
         self,
@@ -202,30 +202,3 @@ class BasicConv(nn.Module):
         # self.bn.freeze_range_backward(
         #     output_range_percentage=(output_end,1.),
         # )
-
-
-
-class Downsample(nn.Module):
-    def __init__(
-        self,
-        ):
-        pass
-
-class BottleNeckStack(nn.Module):
-    def __init__(
-        self,
-        ):
-        pass
-
-class BottleNeck(nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        down_scaling_factor,
-        stride,
-        kernel,
-        activation,
-        ):
-        mid_channels = in_channels // down_scaling_factor
-        pass
